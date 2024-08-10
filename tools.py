@@ -1,61 +1,80 @@
 from langchain_core.tools import tool
-from tavily import TavilyClient
-from dotenv import load_dotenv
-import os 
+import os
+from serpapi import GoogleSearch
+from getpass import getpass
+serpapi_params = {
+    "engine": "google",
+    "api_key": os.getenv("SERPAPI_KEY")
+}
+import mysql.connector
+
+# Establish a connection to the MySQL database
+conn = mysql.connector.connect(
+    host="localhost",
+    user="root",
+    password="@Nilesh.Tiwari1",
+    database="environmental_data"
+
+)
 
 
-load_dotenv()  
 
-client = TavilyClient(api_key=os.environ.get("TAVILY_API_KEY"))
-
-
-
-
+@tool("web_search")
+def web_search(query: str):
+    """Finds general knowledge information using Google search. Can also be used
+    to find to search about CO2 emission of items that we are calculating"""
+    search = GoogleSearch({
+        **serpapi_params,
+        "q": query,
+        "num": 5
+    })
+    results = search.get_dict()["organic_results"]
+    contexts = "\n---\n".join(
+        ["\n".join([x["title"], x["snippet"], x["link"]]) for x in results]
+    )
+    return contexts
 
 
 
 @tool
-def search(query: str):
-    """Call to surf the web."""
-    result = client.search(query, include_answer=True)
-    output = result["answer"]
-    return output
-
-
-@tool
-def pollution(expression: str):
-    """Call to search for air pollution."""
-    if expression == "Polyester":
-        output = 3.5
-    elif expression == "Cotton":
-        output = 5
-    elif expression == "Silk":
-        output = 2
-    elif expression == "Wool":
-        output = 4
-    else:
-        output = "Not found"
-        return output
+def environment_database(material_name:str):
+    """Returns the amount of CO2 emitted by producing 1 Kg of a particular item"""
+    cursor = conn.cursor()
+    query = "SELECT pollution_index FROM materials WHERE material_name = %s"
+    cursor.execute(query, (material_name.lower(),))
+    result = cursor.fetchone()
+    cursor.close()
+    conn.close()
+    return result[0] if result else "Not found use search tool"
     
 
 
+@tool("final_answer")
+def final_answer(
+    introduction: str,
+    research_steps: str,
+    main_body: str,
+    conclusion: str,
+    sources: str
+):
+    """    Returns a natural language response to the user in the form of a research
+    report. There are several sections to this report, those are:
+    - `Environmental cost`: shows the main result in number of how much CO2 produced while creating this product.
+    - `research_steps`: a few bullet points explaining the steps that were taken
+    to research your report.
+    - `main_body`: this is where the bulk of high quality and concise and detailed
+    information about how you calculated CO2 emissions.
+    - `conclusion`: this is a short single paragraph conclusion providing a
+    concise but sophisticated view on what was found.
+    - `sources`: a bulletpoint list provided detailed sources for all information
+    referenced during the research process
 
-
-@tool
-def calculator(expressiona: int, expressionb: int, operator: str):
-    """Call to perform calculations."""
-    if operator == "add":
-        output = expressiona + expressionb
-    elif operator == "subtract":
-        output = expressiona - expressionb
-    elif operator == "multiply":
-        output = expressiona * expressionb
-    elif operator == "divide":
-        output = expressiona / expressionb
-    else:
-        output = "Not found"
-        return output
-
+    """
+    if type(research_steps) is list:
+        research_steps = "\n".join([f"- {r}" for r in research_steps])
+    if type(sources) is list:
+        sources = "\n".join([f"- {s}" for s in sources])
+    return ""
 
 
 
