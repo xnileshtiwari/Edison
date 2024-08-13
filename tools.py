@@ -16,10 +16,9 @@ import mysql.connector
 # Establish a connection to the MySQL database
 conn = mysql.connector.connect(
     host="localhost",
-    user="root",
-    password="@Nilesh.Tiwari1",
-    database="environmental_data"
-
+    user=os.getenv("MYSQL_USERNAME"),
+    password=os.getenv("MYSQL_PASSWORD"),
+    database=os.getenv("MYSQL_DB_NAME")
 )
 
 
