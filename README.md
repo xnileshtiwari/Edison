@@ -1,8 +1,6 @@
-#Edison🌱
+#Edison
 
-The prototype is wrapped into streamlit UI and deployed here
-[![Website](https://img.shields.io/website?up_message=online&url=https%3A%2F%2Fedison.streamlit.app/)]([(https://edison.streamlit.app/)](https://edison.streamlit.app/))
-
+The prototype is wrapped into streamlit UI and deployed [here](https://edison.streamlit.app/)
 
 ## Installation
 
@@ -18,6 +16,7 @@ pip3 install requirements.txt
 
 ```bash
 streamlit run Product_CO2.py
+```
 
 
 ## License
