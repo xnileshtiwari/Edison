@@ -1,23 +1,18 @@
+import pymysql
 import requests
 import dotenv
 from langchain_core.tools import tool
 import os
-
+from serpapi import GoogleSearch
 dotenv.load_dotenv()
-
+import streamlit as st
 from tavily import TavilyClient
 client = TavilyClient(api_key=os.getenv("TAVILY_API_KEY"))
 
-import mysql.connector
 
 
-# Establish a connection to the MySQL database
-conn = mysql.connector.connect(
-    host="localhost",
-    user=os.getenv("MYSQL_USERNAME"),
-    password=os.getenv("MYSQL_PASSWORD"),
-    database=os.getenv("MYSQL_DB_NAME")
-)
+
+
 
 
 
@@ -33,21 +28,48 @@ def web_search(query: str):
 
 
 @tool
-def environment_database(material_name:str):
+def environment_database(materialname:str):
     """Returns the amount of CO2 emitted by producing 1 Kg of a particular item"""
-    if conn.is_connected():
-        cursor = conn.cursor()
-    else:
-        # Reconnect to the database
-        conn.reconnect(attempts=3, delay=5)
-        cursor = conn.cursor()
 
-    query = "SELECT pollution_index FROM materials WHERE material_name = %s"
-    cursor.execute(query, (material_name.lower(),))
-    result = cursor.fetchone()
-    cursor.close()
-    conn.close()
-    return result[0] if result else "Not found use search tool"
+    try:
+        # Connect to the database
+        conn = pymysql.connect(
+            host=st.secrets["mysql"]["host"],
+            user=st.secrets["mysql"]["user"],
+            password=st.secrets["mysql"]["password"],
+            database=st.secrets["mysql"]["db"],
+            port=int(st.secrets["mysql"]["port"]),
+            charset=(st.secrets["mysql"]["charset"]),
+            cursorclass=pymysql.cursors.DictCursor,
+            connect_timeout=10,
+            read_timeout=10,
+            write_timeout=10
+        )
+
+        with conn.cursor() as cursor:
+            # Use parameterized query to avoid SQL injection
+            query = "SELECT emmission_factor FROM materials WHERE LOWER(material_name) = %s"
+            cursor.execute(query, (materialname.lower(),))
+            output = cursor.fetchone()
+
+        # If no result is found
+        if output:
+            return output['emmission_factor']
+        else:
+            return "Material not found use search tool"
+    
+    except pymysql.MySQLError as e:
+        st.error(f"Database error: {e}")
+        return None
+    
+    finally:
+        # Ensure the connection is closed even if an error occurs
+        if conn:
+            conn.close()
+
+
+
+
     
 
 
@@ -77,12 +99,6 @@ def final_answer(
     if type(sources) is list:
         sources = "\n".join([f"- {s}" for s in sources])
     return ""
-
-
-
-
-
-
 
 
 
