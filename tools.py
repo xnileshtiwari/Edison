@@ -2,7 +2,8 @@ import requests
 import dotenv
 from langchain_core.tools import tool
 import os
-from serpapi import GoogleSearch
+from serpapi.search import GoogleSearch
+
 
 dotenv.load_dotenv()
 
