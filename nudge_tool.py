@@ -1,23 +1,18 @@
+import pymysql
 import requests
 import dotenv
 from langchain_core.tools import tool
 import os
-
+from serpapi import GoogleSearch
 dotenv.load_dotenv()
-
-import mysql.connector
-
+import streamlit as st
 from tavily import TavilyClient
 client = TavilyClient(api_key=os.getenv("TAVILY_API_KEY"))
 
-# Establish a connection to the MySQL database
-conn = mysql.connector.connect(
-    host="localhost",
-    user="root",
-    password="@Nilesh.Tiwari1",
-    database="environmental_data"
 
-)
+
+
+
 
 
 
@@ -30,36 +25,73 @@ def web_search(query: str):
 
 
 
-@tool
-def environment_database(material_name:str):
-    """Returns the amount of CO2 emitted by producing 1 Kg of a particular item"""
-    if conn.is_connected():
-        cursor = conn.cursor()
-    else:
-        # Reconnect to the database
-        conn.reconnect(attempts=3, delay=5)
-        cursor = conn.cursor()
 
-    query = "SELECT pollution_index FROM materials WHERE material_name = %s"
-    cursor.execute(query, (material_name.lower(),))
-    result = cursor.fetchone()
-    cursor.close()
-    conn.close()
-    return result[0] if result else "Not found use search tool"
+
+@tool
+def environment_database(materialname:str):
+    """Returns the amount of CO2 emitted by producing 1 Kg of a particular item"""
+
+    try:
+        # Connect to the database
+        conn = pymysql.connect(
+            host=st.secrets["mysql"]["host"],
+            user=st.secrets["mysql"]["user"],
+            password=st.secrets["mysql"]["password"],
+            database=st.secrets["mysql"]["db"],
+            port=int(st.secrets["mysql"]["port"]),
+            charset=(st.secrets["mysql"]["charset"]),
+            cursorclass=pymysql.cursors.DictCursor,
+            connect_timeout=10,
+            read_timeout=10,
+            write_timeout=10
+        )
+
+        with conn.cursor() as cursor:
+            # Use parameterized query to avoid SQL injection
+            query = "SELECT emmission_factor FROM materials WHERE LOWER(material_name) = %s"
+            cursor.execute(query, (materialname.lower(),))
+            output = cursor.fetchone()
+
+        # If no result is found
+        if output:
+            return output['emmission_factor']
+        else:
+            return "Material not found use search tool"
+    
+    except pymysql.MySQLError as e:
+        st.error(f"Database error: {e}")
+        return None
+    
+    finally:
+        # Ensure the connection is closed even if an error occurs
+        if conn:
+            conn.close()
+
+
+
+
     
 
 
 @tool
 def final_answer(
+    introduction: str,
     research_steps: str,
+    main_body: str,
+    conclusion: str,
     sources: str
 ):
-    """Returns a natural language format response to the user in the form of a search result. There are several sections to this report, those are:
-    - `search_result`: a paragraph summarizing the highquality result of query
-    - `sustainable_nudge`: this is you should provide nudge towards the the option with less CO2 emissions, You can 
-    calculate to show the amount of CO2 can be saved.
+    """Returns a natural language format response to the user in the form of a research
+    report. There are several sections to this report, those are:
+    - `Environmental cost`: shows the main result in number of how much CO2 produced while creating this product.
+    - `research_steps`: a few bullet points explaining the steps that were taken
+    to research your report.
+    - `main_body`: this is where the bulk of high quality and concise and detailed
+    information about how you calculated CO2 emissions.
+    - `conclusion`: this is a short single paragraph conclusion providing a
+    concise but sophisticated view on what was found.
     - `sources`: a bulletpoint list provided detailed sources for all information
-    referenced during the search process
+    referenced during the research process
 
     """
     if type(research_steps) is list:
@@ -73,23 +105,8 @@ def final_answer(
 
 
 
-@tool
-def get_distance(origin: str, destination:str):
-    """Returns the distance between two locations. Use the format: Origin: [origin], Destination: [destination]"""
-    # Replace with your API key
-    api_key = os.getenv("GOOGLE_MAPS_KEY")
 
 
-    # Construct the API request URL
-    url = f'https://maps.googleapis.com/maps/api/distancematrix/json?origins={origin}&destinations={destination}&key={api_key}'
 
-    # Send the API request
-    response = requests.get(url)
 
-    # Parse the JSON response
-    data = response.json()
-
-    # Extract the distance and duration
-    distance = data['rows'][0]['elements'][0]['distance']['text']
-    return distance
 
