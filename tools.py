@@ -7,10 +7,9 @@ from serpapi import GoogleSearch
 dotenv.load_dotenv()
 import streamlit as st
 from tavily import TavilyClient
-client = TavilyClient(api_key=os.getenv("TAVILY_API_KEY"))
 
 
-
+client = TavilyClient(api_key=st.secrets['api_keys']['tavily'])
 
 
 
