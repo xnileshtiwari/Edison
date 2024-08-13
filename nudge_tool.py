@@ -3,15 +3,18 @@ import requests
 import dotenv
 from langchain_core.tools import tool
 import os
-from serpapi import GoogleSearch
-dotenv.load_dotenv()
 import streamlit as st
+dotenv.load_dotenv()
+
+
 from tavily import TavilyClient
 client = TavilyClient(api_key=os.getenv("TAVILY_API_KEY"))
 
 
-
-
+serpapi_params = {
+    "engine": "google",
+    "api_key": os.getenv("SERPAPI_KEY")
+}
 
 
 
@@ -22,8 +25,6 @@ def web_search(query: str):
     to find to search about CO2 emission of items that we are calculating"""
     search =client.search(query, search_depth="advanced")["results"]
     return search
-
-
 
 
 
@@ -68,30 +69,17 @@ def environment_database(materialname:str):
             conn.close()
 
 
-
-
-    
-
-
 @tool
 def final_answer(
-    introduction: str,
     research_steps: str,
-    main_body: str,
-    conclusion: str,
     sources: str
 ):
-    """Returns a natural language format response to the user in the form of a research
-    report. There are several sections to this report, those are:
-    - `Environmental cost`: shows the main result in number of how much CO2 produced while creating this product.
-    - `research_steps`: a few bullet points explaining the steps that were taken
-    to research your report.
-    - `main_body`: this is where the bulk of high quality and concise and detailed
-    information about how you calculated CO2 emissions.
-    - `conclusion`: this is a short single paragraph conclusion providing a
-    concise but sophisticated view on what was found.
+    """Returns a natural language format response to the user in the form of a search result. There are several sections to this report, those are:
+    - `search_result`: a paragraph summarizing the highquality result of query
+    - `sustainable_nudge`: this is you should provide nudge towards the the option with less CO2 emissions, You can 
+    calculate to show the amount of CO2 can be saved.
     - `sources`: a bulletpoint list provided detailed sources for all information
-    referenced during the research process
+    referenced during the search process
 
     """
     if type(research_steps) is list:
@@ -105,8 +93,23 @@ def final_answer(
 
 
 
+@tool
+def get_distance(origin: str, destination:str):
+    """Returns the distance between two locations. Use the format: Origin: [origin], Destination: [destination]"""
+    # Replace with your API key
+    api_key = os.getenv("GOOGLE_MAPS_KEY")
 
 
+    # Construct the API request URL
+    url = f'https://maps.googleapis.com/maps/api/distancematrix/json?origins={origin}&destinations={destination}&key={api_key}'
 
+    # Send the API request
+    response = requests.get(url)
 
+    # Parse the JSON response
+    data = response.json()
+
+    # Extract the distance and duration
+    distance = data['rows'][0]['elements'][0]['distance']['text']
+    return distance
 
