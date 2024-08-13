@@ -1,4 +1,5 @@
 serpapi
+google-search-results
 aiohappyeyeballs==2.3.5
 aiohttp==3.10.2
 aiosignal==1.3.1
