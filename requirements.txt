@@ -1,4 +1,4 @@
-serpapi
+serpapi==1.14.0  
 google-search-results
 aiohappyeyeballs==2.3.5
 aiohttp==3.10.2
