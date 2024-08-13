@@ -8,13 +8,7 @@ dotenv.load_dotenv()
 
 
 from tavily import TavilyClient
-client = TavilyClient(api_key=os.getenv("TAVILY_API_KEY"))
-
-
-serpapi_params = {
-    "engine": "google",
-    "api_key": os.getenv("SERPAPI_KEY")
-}
+client = TavilyClient(api_key=st.secrets["api_keys"]["tavily"])
 
 
 
@@ -71,15 +65,23 @@ def environment_database(materialname:str):
 
 @tool
 def final_answer(
+    introduction: str,
     research_steps: str,
+    main_body: str,
+    conclusion: str,
     sources: str
 ):
-    """Returns a natural language format response to the user in the form of a search result. There are several sections to this report, those are:
-    - `search_result`: a paragraph summarizing the highquality result of query
-    - `sustainable_nudge`: this is you should provide nudge towards the the option with less CO2 emissions, You can 
-    calculate to show the amount of CO2 can be saved.
+    """Returns a natural language format response to the user in the form of a research
+    report. There are several sections to this report, those are:
+    - `Environmental cost`: shows the main result in number of how much CO2 produced while creating this product.
+    - `research_steps`: a few bullet points explaining the steps that were taken
+    to research your report.
+    - `main_body`: this is where the bulk of high quality and concise and detailed
+    information about how you calculated CO2 emissions.
+    - `conclusion`: this is a short single paragraph conclusion providing a
+    concise but sophisticated view on what was found.
     - `sources`: a bulletpoint list provided detailed sources for all information
-    referenced during the search process
+    referenced during the research process
 
     """
     if type(research_steps) is list:
@@ -97,7 +99,7 @@ def final_answer(
 def get_distance(origin: str, destination:str):
     """Returns the distance between two locations. Use the format: Origin: [origin], Destination: [destination]"""
     # Replace with your API key
-    api_key = os.getenv("GOOGLE_MAPS_KEY")
+    api_key = st.secrets["api_keys"]["google_maps"]
 
 
     # Construct the API request URL
