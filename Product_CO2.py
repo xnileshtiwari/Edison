@@ -60,7 +60,7 @@ with st.form("my_form"):
 
             llm = ChatGoogleGenerativeAI(
                 model="gemini-1.5-pro",
-                google_api_key=os.environ["GOOGLE_API_KEY"],
+                google_api_key=st.secrets["api_keys"]["gemini"],
                 temperature=0
             )
 
