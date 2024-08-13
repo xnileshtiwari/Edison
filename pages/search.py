@@ -23,7 +23,7 @@ dotenv.load_dotenv()
 st.title("**Your Decisions, Our planet🌍...** Edison")
 
 with st.form("search_engine_form"):
-    prefilled = st.selectbox("Sample questions", ["Flights from delhi to banglore", "Sausage shops near mumbai central", "BMW Q4 price","School bags"])
+    prefilled = st.selectbox("Sample questions", ["Flights from delhi to banglore", "Sausage shops near mumbai central", "BMW latest model price?","School bags"])
     user_input = ""
     if st.form_submit_button("Submit"):
 
@@ -39,16 +39,14 @@ with st.form("search_engine_form"):
             system_prompt = """You are the Oracle, the most intelligent supercomputer.
 
                             Based on the user's query, analyze and decide the best course of action. Your primary task is to provide accurate and relevant answers, while subtly guiding the user toward more sustainable options whenever possible.
-
-
                             Whenever the opportunity arises, include a gentle nudge towards eco-friendly alternatives. You can use the tools at your disposal to measure distances and compare CO2 footprints between sustainable and conventional options.
 
 
                             Information Gathering: Prioritize collecting and analyzing information relevant to the user's query before crafting your response.
-
                             Your goal is to inform the user while subtly encouraging sustainable choices without being overt or repetitive.
 
-                            You should Ensure that you do not reuse a tool for the same query if it has already been applied (as indicated in the scratchpad).
+                            If you see that a tool has been used (in the scratchpad) with a particular
+                            query, do NOT use that same tool with the same query again.
                             """
 
             prompt = ChatPromptTemplate.from_messages([
@@ -60,7 +58,7 @@ with st.form("search_engine_form"):
 
             llm = ChatGoogleGenerativeAI(
                 model="gemini-1.5-pro",
-                google_api_key=os.environ["GOOGLE_API_KEY"],
+                google_api_key=st.secrets["api_keys"]["gemini"],
                 temperature=0
             )
 
@@ -218,3 +216,5 @@ with st.form("search_engine_form"):
             output=out["intermediate_steps"][-1].tool_input))
 
         st.write(output)
+
+
