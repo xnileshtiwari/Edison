@@ -1,4 +1,4 @@
-#Edison
+# Edison🌱
 
 The prototype is wrapped into streamlit UI and deployed [here](https://edison.streamlit.app/)
 
