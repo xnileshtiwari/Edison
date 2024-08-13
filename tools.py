@@ -2,15 +2,12 @@ import requests
 import dotenv
 from langchain_core.tools import tool
 import os
-from serpapi.search import GoogleSearch
-
 
 dotenv.load_dotenv()
 
-serpapi_params = {
-    "engine": "google",
-    "api_key": os.getenv("SERPAPI_KEY")
-}
+from tavily import TavilyClient
+client = TavilyClient(api_key=os.getenv("TAVILY_API_KEY"))
+
 import mysql.connector
 
 
@@ -28,16 +25,8 @@ conn = mysql.connector.connect(
 def web_search(query: str):
     """Finds general knowledge information using Google search. Can also be used
     to find to search about CO2 emission of items that we are calculating"""
-    search = GoogleSearch({
-        **serpapi_params,
-        "q": query,
-        "num": 5
-    })
-    results = search.get_dict()["organic_results"]
-    contexts = "\n---\n".join(
-        ["\n".join([x["title"], x["snippet"], x["link"]]) for x in results]
-    )
-    return contexts
+    search =client.search(query, search_depth="advanced")["results"]
+    return search
 
 
 
