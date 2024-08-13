@@ -1,12 +1,17 @@
+import requests
+import dotenv
 from langchain_core.tools import tool
 import os
 from serpapi import GoogleSearch
-from getpass import getpass
+
+dotenv.load_dotenv()
+
 serpapi_params = {
     "engine": "google",
     "api_key": os.getenv("SERPAPI_KEY")
 }
 import mysql.connector
+
 
 # Establish a connection to the MySQL database
 conn = mysql.connector.connect(
@@ -19,7 +24,7 @@ conn = mysql.connector.connect(
 
 
 
-@tool("web_search")
+@tool
 def web_search(query: str):
     """Finds general knowledge information using Google search. Can also be used
     to find to search about CO2 emission of items that we are calculating"""
@@ -36,10 +41,18 @@ def web_search(query: str):
 
 
 
+
+
 @tool
 def environment_database(material_name:str):
     """Returns the amount of CO2 emitted by producing 1 Kg of a particular item"""
-    cursor = conn.cursor()
+    if conn.is_connected():
+        cursor = conn.cursor()
+    else:
+        # Reconnect to the database
+        conn.reconnect(attempts=3, delay=5)
+        cursor = conn.cursor()
+
     query = "SELECT pollution_index FROM materials WHERE material_name = %s"
     cursor.execute(query, (material_name.lower(),))
     result = cursor.fetchone()
@@ -49,7 +62,7 @@ def environment_database(material_name:str):
     
 
 
-@tool("final_answer")
+@tool
 def final_answer(
     introduction: str,
     research_steps: str,
@@ -57,7 +70,7 @@ def final_answer(
     conclusion: str,
     sources: str
 ):
-    """    Returns a natural language response to the user in the form of a research
+    """Returns a natural language format response to the user in the form of a research
     report. There are several sections to this report, those are:
     - `Environmental cost`: shows the main result in number of how much CO2 produced while creating this product.
     - `research_steps`: a few bullet points explaining the steps that were taken
@@ -75,6 +88,14 @@ def final_answer(
     if type(sources) is list:
         sources = "\n".join([f"- {s}" for s in sources])
     return ""
+
+
+
+
+
+
+
+
 
 
 
