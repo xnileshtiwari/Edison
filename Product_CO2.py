@@ -234,5 +234,5 @@ if submitted:
     st.write(f'Query: {theater}')
 
     with st.spinner("Researching..."):
-        output = generateanswer(user_question)
+        output = generateanswer(theater)
         st.write(output)
