@@ -1,5 +1,6 @@
 serpapi
-google.oauth2.credentials
+google-auth
+google-auth-oauthlib
 google-search-results
 aiohappyeyeballs==2.3.5
 aiohttp==3.10.2
