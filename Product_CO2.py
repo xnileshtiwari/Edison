@@ -30,7 +30,7 @@ dotenv.load_dotenv()
 questions = [
     "What is the CO2 emission of a Hamburger? ",
     "What is the CO2 emission of a cotton T-shirt?",
-    "What is the CO2 emission of a 2-hour flight?"
+    "What is the CO2 emission of a 2-hour flight?",
     "What is the CO2 emission of iphone 14? ",
 ]
 
