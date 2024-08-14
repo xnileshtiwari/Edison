@@ -63,7 +63,7 @@ def edison(input):
 def stream_data(input):
     for word in input.split(" "):
         yield word + " "
-        time.sleep(0.1)
+        time.sleep(0.03)
 
 
 
