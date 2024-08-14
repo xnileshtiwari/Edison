@@ -90,7 +90,7 @@ with col3:
 
 
 if on:
-    st.write("AI assistant aligned to promoting sustainability🌍")
+    st.write("AI assistant aligned towards promoting sustainability🌍")
 
 
 
