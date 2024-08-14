@@ -6,7 +6,6 @@ import time
 import numpy as np
 import pandas as pd
 import streamlit as st
-import streamlit_lottie as st_lottie
 import json
 from google.oauth2.credentials import Credentials
 
