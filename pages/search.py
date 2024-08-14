@@ -1,220 +1,162 @@
-from langgraph.graph import StateGraph, END
-import sys
 import os
+import requests
 import streamlit as st
-from langchain.schema import SystemMessage
-from langchain_core.messages import ToolCall, ToolMessage
-from langchain_google_genai import ChatGoogleGenerativeAI
-import os
-from typing import TypedDict, Annotated, List, Union
-from langchain_core.agents import AgentAction, AgentFinish
-from langchain_core.messages import BaseMessage
-import operator
-from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
-import dotenv
-from nudge_tool import environment_database, final_answer, web_search, get_distance
-
-
-
+import google.generativeai as genai
+import time
+import numpy as np
+import pandas as pd
 import streamlit as st
-dotenv.load_dotenv()
+import streamlit_lottie as st_lottie
+import json
+from google.oauth2.credentials import Credentials
 
-
-st.title("**Your Decisions, Our planet🌍...** Edison")
-
-with st.form("search_engine_form"):
-    prefilled = st.selectbox("Sample questions", ["Flights from delhi to banglore", "Sausage shops near mumbai central", "BMW latest model price?","School bags"])
-    user_input = ""
-    if st.form_submit_button("Submit"):
-
-        with st.spinner(f'Searching {prefilled}...'):
-
-
-            class AgentState(TypedDict):
-                input: str
-                chat_history: list[BaseMessage]
-                intermediate_steps: Annotated[list[tuple[AgentAction, str]], operator.add]
-
-
-            system_prompt = """You are the Oracle, the most intelligent supercomputer.
-
-                            Based on the user's query, analyze and decide the best course of action. Your primary task is to provide accurate and relevant answers, while subtly guiding the user toward more sustainable options whenever possible.
-                            Whenever the opportunity arises, include a gentle nudge towards eco-friendly alternatives. You can use the tools at your disposal to measure distances and compare CO2 footprints between sustainable and conventional options.
-
-
-                            Information Gathering: Prioritize collecting and analyzing information relevant to the user's query before crafting your response.
-                            Your goal is to inform the user while subtly encouraging sustainable choices without being overt or repetitive.
-
-                            If you see that a tool has been used (in the scratchpad) with a particular
-                            query, do NOT use that same tool with the same query again.
-                            """
-
-            prompt = ChatPromptTemplate.from_messages([
-                ("system", system_prompt),
-                MessagesPlaceholder(variable_name="chat_history"),
-                ("user", "{input}"),
-                ("assistant", "scratchpad: {scratchpad}"),
-            ])
-
-            llm = ChatGoogleGenerativeAI(
-                model="gemini-1.5-pro",
-                google_api_key=st.secrets["api_keys"]["gemini"],
-                temperature=0
-            )
-
-            tools=[
-                environment_database,
-                web_search,
-                final_answer,
-                get_distance
-            ]
-
-            system_message = SystemMessage(content=system_prompt)
-
-            def create_scratchpad(intermediate_steps: list[AgentAction]):
-                research_steps = []
-                for i, action in enumerate(intermediate_steps):
-                    if action.log != "TBD":
-                        research_steps.append(
-                            f"- Tool: {action.tool}\n  Input: {action.tool_input}\n  Output: {action.log}"
-                        )
-                return "\n".join(research_steps)
-
-
-            # Suppress warnings
-            sys.stdout = open(os.devnull, 'w')
-            sys.stderr = open(os.devnull, 'w')
-
-
-            oracle = (
-                {
-                    "input": lambda x: x["input"],
-                    "chat_history": lambda x: x["chat_history"],
-                    "scratchpad": lambda x: create_scratchpad(
-                        intermediate_steps=x["intermediate_steps"]
-                    ),
-                }
-
-                | prompt
-                | llm.bind_tools(tools, tool_choice="any")
-            )
-            # Restore stdout and stderr
-            sys.stdout = sys.__stdout__
-            sys.stderr = sys.__stderr__
+SCOPES = ['https://www.googleapis.com/auth/generative-language.retriever']
 
 
 
-            def run_oracle(state: list):
-                out = oracle.invoke(state)
-                tool_name = out.tool_calls[0]["name"]
-                tool_args = out.tool_calls[0]["args"]
-                action_out = AgentAction(
-                    tool=tool_name,
-                    tool_input=tool_args,
-                    log="TBD"
-                )
-                return {
-                    "intermediate_steps": state.get("intermediate_steps", []) + [action_out]
-                } 
-
-            def router(state: list):
-                if state.get("intermediate_steps"):
-                    return state["intermediate_steps"][-1].tool
-                else:
-                    print("Router: Starting with final_answer as no intermediate steps found.")
-                    return "final_answer"
-
-            tool_str_to_func = {
-                "environment_database": environment_database,
-                "web_search": web_search,
-                "final_answer": final_answer,
-                "get_distance": get_distance
-            }
-
-            def run_tool(state: list):
-                tool_name = state["intermediate_steps"][-1].tool
-                tool_args = state["intermediate_steps"][-1].tool_input
-
-                print(f"Running tool: {tool_name} with input: {tool_args}")  # Debugging line
-
-                out = tool_str_to_func[tool_name].invoke(input=tool_args)
-                action_out = AgentAction(
-                    tool=tool_name,
-                    tool_input=tool_args,
-                    log=str(out)
-                )
-                # Update intermediate steps in the state
-                state["intermediate_steps"].append(action_out)
-                return state 
-
-            graph = StateGraph(AgentState)
-            graph.add_node("oracle", run_oracle)
-            graph.add_node("environment_database", run_tool)
-            graph.add_node("web_search", run_tool)
-            graph.add_node("get_distance", run_tool)
-            graph.add_node("final_answer", run_tool)
-
-            graph.set_entry_point("oracle")
-            graph.add_conditional_edges(
-                source="oracle", 
-                path=router,  
-            )
-
-            for tool_obj in tools:
-                if tool_obj.name != "final_answer":
-                    graph.add_edge(tool_obj.name, "oracle")
-
-            graph.add_edge("final_answer", END)
-
-            runnable = graph.compile()
-
-
-            initial_state = {
-                "input": f"{prefilled}",
-                "chat_history": [],
-                "intermediate_steps": [] 
-            }
-
-            out = runnable.invoke(initial_state)
-
-            def build_report(output: dict):
-                research_steps = output.get("research_steps", []) 
-                if isinstance(research_steps, list):
-                    research_steps = "\n".join([f"- {r}" for r in research_steps])
-                sources = output.get("sources", []) 
-                if isinstance(sources, list):
-                    sources = "\n".join([f"- {s}" for s in sources])
-                return f"""
-                    INTRODUCTION
-                    ------------
-                    {output.get("introduction", "")} 
-
-                    RESEARCH STEPS
-                    --------------
-                    {research_steps}
-
-                    REPORT
-                    ------
-                    {output.get("main_body", "")} 
-
-                    CONCLUSION
-                    ----------
-                    {output.get("conclusion", "")} 
-
-                    SOURCES
-                    -------
-                    {sources}
-                    """
-            
 
 
 
-        st.success("Done!")
 
-        # Access the final tool input from the last intermediate step
-        output = (build_report(
-            output=out["intermediate_steps"][-1].tool_input))
+gcp_credentials_dict = {
+    "token": st.secrets["gcp_token"]["token"],
+    "refresh_token": st.secrets["gcp_token"]["refresh_token"],
+    "token_uri": st.secrets["gcp_token"]["token_uri"],
+    "client_id": st.secrets["gcp_token"]["client_id"],
+    "client_secret": st.secrets["gcp_token"]["client_secret"],
+    "scopes": SCOPES,
+    "universe_domain": st.secrets["gcp_token"]["universe_domain"],
+    "expiry": st.secrets["gcp_token"]["expiry"]
+}
 
-        st.write(output)
+
+
+
+gcp_credentials = Credentials.from_authorized_user_info(gcp_credentials_dict)
+
+
+
+
+
+
+
+def edison(input):
+    genai.configure(credentials=gcp_credentials)
+
+    
+    model = genai.GenerativeModel(
+    model_name="tunedModels/gemini1-gcj8te79ymew"
+    )
+
+    chat_session = model.start_chat(
+    history=[]
+    )
+
+    response = chat_session.send_message(input)
+
+    return response.text
+
+
+
+
+
+
+def stream_data(input):
+    for word in input.split(" "):
+        yield word + " "
+        time.sleep(0.1)
+
+
+
+
+
+
+
+# Center the toggle
+st.empty()
+col1, col2, col3 = st.columns(3)
+with col1:
+    st.empty()
+with col2:
+    on = st.toggle("Activate Edison")
+
+    if on:
+        st.title("Edison🌱")
+
+    else:
+        st.title("Default🔎")
+
+with col3:
+    st.empty()
+
+
+if on:
+    st.write("AI assistant aligned to promoting sustainability🌍")
+
+
+
+# Pre-written questions
+pre_written_questions = [
+    "Choose prompts",
+    "How can i become a good individual?",
+    "Recipes And Cooking Tips",
+    "Flights from ayodhya to delhi",
+    "Tips for a well-balanced diet",
+    "I want to fly first-class from Miami to Dubai.",
+    "What’s the fastest flight from Chicago to San Francisco?",
+    "Looking for a round-trip flight from Sydney to Melbourne."
+]
+
+
+
+
+
+
+
+
+
+def normal(input):
+    genai.configure(api_key=st.secrets['api_keys']['gemini'])
+
+    model = genai.GenerativeModel('gemini-1.5-flash')
+
+    response = model.generate_content(input)
+    return response.text
+
+
+
+
+
+
+
+
+
+
+
+
+with st.form("my_form", clear_on_submit=True):
+    selected_question = st.selectbox(
+    "Choose a pre-written prompt to test:",
+    options=pre_written_questions)
+    
+    user = st.text_input("What do you have on your mind?", key="Edison",placeholder="Type something...")
+
+    submitted = st.form_submit_button("Submit")
+
+
+if submitted:
+    theater = user if user else selected_question
+
+    if on:
+        st.write(f'Query: {theater}')
+        with st.spinner("Generating..."):
+            emo = edison(theater)
+        st.write_stream(stream_data(emo))
+    else:
+        st.write(f'Query: {theater}')
+        with st.spinner("Generating..."):
+            normal_text = normal(theater)
+        st.write_stream(stream_data(normal_text))
+
 
 
