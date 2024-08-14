@@ -28,9 +28,10 @@ dotenv.load_dotenv()
 
 
 questions = [
+    "What is the CO2 emission of a Hamburger? ",
+    "What is the CO2 emission of a cotton T-shirt?",
+    "What is the CO2 emission of a 2-hour flight?"
     "What is the CO2 emission of iphone 14? ",
-    "What is the CO2 emission of a Tesla Model X? ",
-    "What is the CO2 emission of a Samsung Galaxy S22? ",
 ]
 
 
@@ -45,22 +46,17 @@ class AgentState(TypedDict):
     intermediate_steps: Annotated[list[tuple[AgentAction, str]], operator.add]
 
 
-system_prompt = """You are the oracle, the great AI decision maker.
-Given the user's query you must decide what to do with it based on the
-list of tools provided to you.
+system_prompt = """You are Oracle, the smartest CO2 emission calculator in the world. 
+You can use different methods to calculate CO2 emitted in making the items. 
 
-Your main job is to calculate the CO2 emission of an item provided by the user. 
-So firstly you should search the item's brand website to see if they provide a CO2 footprint or any 
-resources that could help in calculating the CO2 emissions. 
+At first search on the web to find CO2 emission if you found no answers then. 
+Adapt best strategy to calculate carbon emission of this product.
 
-When you need to find information about the CO2 emission of items PLEASE prioritize
-using the environment_database. If it returns "not found" then use the search tool.
 
 If you see that a tool has been used (in the scratchpad) with a particular
 query, do NOT use that same tool with the same query again.
 
-You should aim to collect information from a diverse range of sources before
-providing the answer to the user."""
+You should aim to give accurate information about CO2 emitted in making of the item. """
 
 prompt = ChatPromptTemplate.from_messages([
     ("system", system_prompt),
