@@ -36,6 +36,13 @@ questions = [
 
 
     
+LANGCHAIN_API_KEY = st.secrets['api_keys']['langchain']
+
+os.environ['LANGCHAIN_API_KEY'] = LANGCHAIN_API_KEY
+
+# Optional, add tracing in LangSmith
+os.environ["LANGCHAIN_TRACING_V2"] = "true"
+os.environ["LANGCHAIN_PROJECT"] = "CO2_Reports"
 
 
 
