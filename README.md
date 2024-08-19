@@ -7,6 +7,11 @@ Try the protype here 👇🏼 <br/>
 <br/>
 [![Website Badge](https://img.shields.io/badge/Website-https://edison.streamlit.app/-blue?style=for-the-badge)](https://edison.streamlit.app/)
 
+### Why Edison:
+[![Watch this video on YouTube](https://github.com/user-attachments/assets/aa264ddf-378a-499c-b912-e999decfcb91)](https://youtu.be/2QcHn_w7flQ?si=98SXbW-_gTpYnZT1)
+
+
+
 ## Installation
 
 ```bash
