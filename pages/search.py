@@ -1,18 +1,18 @@
-import os
-import requests
 import streamlit as st
 import google.generativeai as genai
-import time
-import numpy as np
-import pandas as pd
-import streamlit as st
-import json
 from google.oauth2.credentials import Credentials
-
+import time
 SCOPES = ['https://www.googleapis.com/auth/generative-language.retriever']
 
 
 
+generation_config = {
+  "temperature": 0.5,
+  "top_p": 0.95,
+  "top_k": 64,
+  "max_output_tokens": 1000,
+  "response_mime_type": "text/plain",
+}
 
 
 
@@ -44,7 +44,8 @@ def edison(input):
 
     
     model = genai.GenerativeModel(
-    model_name="tunedModels/gemini1-gcj8te79ymew"
+    model_name="tunedModels/gemini1-gcj8te79ymew",
+    generation_config=generation_config
     )
 
     chat_session = model.start_chat(
@@ -99,7 +100,6 @@ pre_written_questions = [
     "Choose prompts",
     "How can i become a good individual?",
     "Recipes And Cooking Tips",
-    "Flights from ayodhya to delhi",
     "Tips for a well-balanced diet",
     "I want to fly first-class from Miami to Dubai.",
     "What’s the fastest flight from Chicago to San Francisco?",
@@ -117,7 +117,7 @@ pre_written_questions = [
 def normal(input):
     genai.configure(api_key=st.secrets['api_keys']['gemini'])
 
-    model = genai.GenerativeModel('gemini-1.5-flash')
+    model = genai.GenerativeModel('gemini-1.5-flash', generation_config=generation_config)
 
     response = model.generate_content(input)
     return response.text
@@ -156,6 +156,5 @@ if submitted:
         with st.spinner("Generating..."):
             normal_text = normal(theater)
         st.write_stream(stream_data(normal_text))
-
 
 
