@@ -40,21 +40,24 @@ gcp_credentials = Credentials.from_authorized_user_info(gcp_credentials_dict)
 
 
 def edison(input):
-    genai.configure(credentials=gcp_credentials)
+  generation_config = {
+  "temperature": 0,
+  "top_p": 0.95,
+  "top_k": 64,
+  "max_output_tokens": 8192,
+  "response_mime_type": "text/plain",
+  }
+  
+  
+  model = genai.GenerativeModel(
+  model_name= st.secrets["api_keys"]["model"], apikey = st.secrets["api_keys"]["gemini"],
+  generation_config=generation_config,
+  )
+  
+  # Generate text
+  response = model.generate_content(input)
+  return response.text
 
-    
-    model = genai.GenerativeModel(
-    model_name="tunedModels/gemini1-gcj8te79ymew",
-    generation_config=generation_config
-    )
-
-    chat_session = model.start_chat(
-    history=[]
-    )
-
-    response = chat_session.send_message(input)
-
-    return response.text
 
 
 
