@@ -6,8 +6,7 @@ import time
 
 
 
-
-  generation_config = {
+generation_config = {
   "temperature": 0.2,
   "top_p": 0.95,
   "top_k": 64,
