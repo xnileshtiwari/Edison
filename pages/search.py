@@ -1,10 +1,19 @@
 import streamlit as st
 import google.generativeai as genai
-from google.oauth2.credentials import Credentials
 import time
 
 
 
+
+# Configure Gemini ONCE at app startup
+genai.configure(api_key=st.secrets["api_keys"]["gemini"])  # Use api_key, not apikey
+
+normal_model = "gemini-1.5-flash"
+
+
+
+# Initialize the model ONCE outside the function
+model = genai.GenerativeModel(normal_model)  # Use the model_name
 
 generation_config = {
   "temperature": 0.2,
@@ -12,23 +21,23 @@ generation_config = {
   "top_k": 64,
   "max_output_tokens": 8192,
   "response_mime_type": "text/plain",
-  }
+}
+
+model_name = st.secrets["api_keys"]["model"]
 
 
 
 def edison(input):  
+    model = genai.GenerativeModel(model_name)  # Use the model_name
+
+
+    response = model.generate_content(input, generation_config=generation_config, stream=True)  # Add generation_config here.
+    full_text = "".join([chunk.text for chunk in response])
+    return full_text
+
+
+
   
-  model = genai.GenerativeModel(
-  model_name= st.secrets["api_keys"]["model"], apikey = st.secrets["api_keys"]["gemini"],
-  generation_config=generation_config,
-  )
-  
-  # Generate text
-  response = model.generate_content(input)
-  return response.text
-
-
-
 
 
 
@@ -86,13 +95,14 @@ pre_written_questions = [
 
 
 
+
 def normal(input):
-    genai.configure(api_key=st.secrets['api_keys']['gemini'])
+    model = genai.GenerativeModel(normal_model)  # Use the model_name
 
-    model = genai.GenerativeModel('gemini-1.5-flash', generation_config=generation_config)
-
-    response = model.generate_content(input)
-    return response.text
+    #  genai is ALREADY configured, and model is ALREADY instantiated
+    response = model.generate_content(input, generation_config=generation_config, stream=True)  # Add generation_config here.
+    full_text = "".join([chunk.text for chunk in response])
+    return full_text
 
 
 
