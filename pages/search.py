@@ -2,36 +2,16 @@ import streamlit as st
 import google.generativeai as genai
 from google.oauth2.credentials import Credentials
 import time
-SCOPES = ['https://www.googleapis.com/auth/generative-language.retriever']
-
-
-
-generation_config = {
-  "temperature": 0.5,
-  "top_p": 0.95,
-  "top_k": 64,
-  "max_output_tokens": 1000,
-  "response_mime_type": "text/plain",
-}
 
 
 
 
-gcp_credentials_dict = {
-    "token": st.secrets["gcp_token"]["token"],
-    "refresh_token": st.secrets["gcp_token"]["refresh_token"],
-    "token_uri": st.secrets["gcp_token"]["token_uri"],
-    "client_id": st.secrets["gcp_token"]["client_id"],
-    "client_secret": st.secrets["gcp_token"]["client_secret"],
-    "scopes": SCOPES,
-    "universe_domain": st.secrets["gcp_token"]["universe_domain"],
-    "expiry": st.secrets["gcp_token"]["expiry"]
-}
 
 
 
 
-gcp_credentials = Credentials.from_authorized_user_info(gcp_credentials_dict)
+
+
 
 
 
