@@ -30,7 +30,7 @@ git clone https://github.com/xnileshtiwari/Edison.git
 cd Edison
 ```
 ```bash
-pip3 install requirements.txt
+pip install requirements.txt
 ```
 
 ```bash
