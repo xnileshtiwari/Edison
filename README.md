@@ -30,12 +30,14 @@ git clone https://github.com/xnileshtiwari/Edison.git
 cd Edison
 ```
 ```bash
-pip install requirements.txt
+pip3 install requirements.txt
 ```
 
 ```bash
 streamlit run Product_CO2.py
 ```
+
+If you face any issue contact nileshtiwari1184@gmail.com
 
 
 ## License
