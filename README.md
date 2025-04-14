@@ -37,8 +37,6 @@ pip3 install requirements.txt
 streamlit run Product_CO2.py
 ```
 
-If you face any issue contact nileshtiwari1184@gmail.com
-
 
 ## License
 
