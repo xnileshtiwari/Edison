@@ -23,7 +23,7 @@ generation_config = {
   "response_mime_type": "text/plain",
 }
 
-model_name = st.secrets["api_keys"]["model"]
+model_name = "tunedModels/gemini1-gcj8te79ymew"
 
 
 
