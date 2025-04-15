@@ -35,13 +35,9 @@ questions = [
 ]
 
 
-    
-LANGCHAIN_API_KEY = st.secrets['api_keys']['langchain']
-
-os.environ['LANGCHAIN_API_KEY'] = LANGCHAIN_API_KEY
 
 # Optional, add tracing in LangSmith
-os.environ["LANGCHAIN_TRACING_V2"] = "true"
+# os.environ["LANGCHAIN_TRACING_V2"] = "true"
 os.environ["LANGCHAIN_PROJECT"] = "CO2_Reports"
 
 
@@ -74,7 +70,7 @@ prompt = ChatPromptTemplate.from_messages([
 
 llm = ChatGoogleGenerativeAI(
     model="gemini-1.5-pro",
-    google_api_key=st.secrets["api_keys"]["gemini"],
+    google_api_key=st.secrets["gemini"],
     temperature=0
 )
 
