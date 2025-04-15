@@ -6,7 +6,7 @@ import time
 
 
 # Configure Gemini ONCE at app startup
-genai.configure(api_key=st.secrets["api_keys"]["gemini"])  # Use api_key, not apikey
+genai.configure(api_key=st.secrets["gemini"])  # Use api_key, not apikey
 
 normal_model = "gemini-1.5-flash"
 
